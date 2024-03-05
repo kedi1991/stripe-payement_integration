@@ -9,10 +9,15 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.stripe.Stripe;
 import com.stripe.exception.*;
+import com.stripe.model.AutomaticPaymentMethodsPaymentIntent;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
+import com.stripe.model.PaymentIntent;
 import com.stripe.net.ApiResource;
 import com.stripe.net.Webhook;
+import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.PaymentIntentCreateParams.AutomaticPaymentMethods;
+
 import io.github.cdimascio.dotenv.Dotenv;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -73,6 +78,32 @@ public class Server {
         );
       }
     );
+
+
+
+    //create a payment intent
+    post("/create-payment-intent", (request, response) -> {
+
+
+      PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+      .setAmount(1200L)
+      .setCurrency("usd")
+      .setAutomaticPaymentMethods(AutomaticPaymentMethods.builder()
+      .setEnabled(true)
+      .build())
+      .build();
+
+      response.type("application/json");
+
+      PaymentIntent intent = PaymentIntent.create(params);
+
+      //get the client secret
+      HashMap<String, String> clientSecretResponse = new  HashMap<>();
+      clientSecretResponse.put("clientSecret", intent.getClientSecret());
+
+      return gson.toJson(clientSecretResponse);
+
+    });
 
     post(
       "/webhook",
